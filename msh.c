@@ -1,3 +1,10 @@
+/*
+
+    Name: Zachery Gentry
+    ID:   1001144385
+
+*/
+
 // The MIT License (MIT)
 //
 // Copyright (c) 2016, 2017 Trevor Bakker
@@ -37,7 +44,7 @@
 
 #define MAX_COMMAND_SIZE 255 // The maximum command-line size
 
-#define MAX_NUM_ARGUMENTS 5 // Mav shell only supports five arguments
+#define MAX_NUM_ARGUMENTS 10 // Mav shell only supports five arguments
 
 char *getInput(char *);
 
@@ -97,7 +104,12 @@ char *getInput(char *cmd_str)
 
     if (pid == 0)
     {
-        char dir[100];
+        if (strcmp(token[0], "quit") == 0 || strcmp(token[0], "exit") == 0)
+        {
+            exit(EXIT_SUCCESS);
+        }
+
+        char dir[250];
         strcpy(dir, "/bin/");
         strcat(dir, token[0]);
 
@@ -107,6 +119,10 @@ char *getInput(char *cmd_str)
     else
     {
         wait(&pid);
+        if(pid == 0)
+        {
+            exit(EXIT_SUCCESS);
+        }
     }
 
     free(working_root);
