@@ -52,7 +52,7 @@ int main()
     return 0;
 }
 
-char *getInput(char * cmd_str)
+char *getInput(char *cmd_str)
 {
     // Print out the msh prompt
     printf("msh> ");
@@ -92,13 +92,21 @@ char *getInput(char * cmd_str)
         }
         token_count++;
     }
-    
-    // \TODO Remove this code and replace with your shell functionality
 
-    int token_index = 0;
-    for (token_index = 0; token_index < token_count; token_index++)
+    pid_t pid = fork();
+
+    if (pid == 0)
     {
-        printf("token[%d] = %s\n", token_index, token[token_index]);
+        char dir[100];
+        strcpy(dir, "/bin/");
+        strcat(dir, token[0]);
+
+        execl(dir, token[0], token[1], token[2], token[3], token[4], token[5], token[6], token[7], token[8], token[9], NULL);
+    }
+
+    else
+    {
+        wait(&pid);
     }
 
     free(working_root);
