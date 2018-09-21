@@ -46,7 +46,10 @@
 
 #define MAX_NUM_ARGUMENTS 10 // Mav shell only supports five arguments
 
-char *getInput(char *);
+char *token[MAX_NUM_ARGUMENTS];
+
+void getInput(char *);
+void execute();
 
 int main()
 {
@@ -55,14 +58,20 @@ int main()
     while (1)
     {
         getInput(cmd_str);
+        execute();
     }
     return 0;
 }
 
-char *getInput(char *cmd_str)
+void getInput(char *cmd_str)
 {
     // Print out the msh prompt
     printf("msh> ");
+    int i;
+    for (i = 0; i < MAX_NUM_ARGUMENTS; i++)
+    {
+        token[i] = NULL;
+    }
 
     // Read the command from the commandline.  The
     // maximum command that will be read is MAX_COMMAND_SIZE
@@ -73,7 +82,6 @@ char *getInput(char *cmd_str)
         ;
 
     /* Parse input */
-    char *token[MAX_NUM_ARGUMENTS];
 
     int token_count = 0;
 
@@ -100,32 +108,34 @@ char *getInput(char *cmd_str)
         token_count++;
     }
 
+    free(working_root);
+}
+
+void execute()
+{
+    if (token[0] == NULL)
+    {
+    }
+    else if (strcmp(token[0], "quit") == 0 || strcmp(token[0], "exit") == 0)
+    {
+        exit(EXIT_SUCCESS);
+    }
     pid_t pid = fork();
 
     if (pid == 0)
     {
-        if (strcmp(token[0], "quit") == 0 || strcmp(token[0], "exit") == 0)
-        {
-            exit(EXIT_SUCCESS);
-        }
 
         char dir[250];
         strcpy(dir, "/bin/");
         strcat(dir, token[0]);
 
         execl(dir, token[0], token[1], token[2], token[3], token[4], token[5], token[6], token[7], token[8], token[9], NULL);
+
+        exit(EXIT_SUCCESS);
     }
 
     else
     {
         wait(&pid);
-        if(pid == 0)
-        {
-            exit(EXIT_SUCCESS);
-        }
     }
-
-    free(working_root);
-
-    return token;
 }
