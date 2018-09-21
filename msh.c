@@ -37,9 +37,9 @@
 #include <string.h>
 #include <signal.h>
 
-#define WHITESPACE " \t\n" // We want to split our command line up into tokens 
-                           // so we need to define what delimits our tokens.   
-                           // In this case  white space                        
+#define WHITESPACE " \t\n" // We want to split our command line up into tokens \
+                           // so we need to define what delimits our tokens.   \
+                           // In this case  white space                        \
                            // will separate the tokens on our command line
 
 #define MAX_COMMAND_SIZE 255 // The maximum command-line size
@@ -47,13 +47,21 @@
 #define MAX_NUM_ARGUMENTS 10 // Mav shell only supports five arguments
 
 char *token[MAX_NUM_ARGUMENTS];
+struct sigaction act;
 
 void getInput(char *);
 void execute();
+void handle_signal();
 
 int main()
 {
     char *cmd_str = (char *)malloc(MAX_COMMAND_SIZE);
+
+    memset(&act, '\0', sizeof(act));
+    act.sa_handler = &handle_signal;
+
+    sigaction(SIGINT, &act, NULL);
+    sigaction(SIGTSTP, &act, NULL);
 
     while (1)
     {
@@ -67,6 +75,7 @@ void getInput(char *cmd_str)
 {
     // Print out the msh prompt
     printf("msh> ");
+
     int i;
     for (i = 0; i < MAX_NUM_ARGUMENTS; i++)
     {
@@ -166,5 +175,17 @@ void execute()
     else
     {
         wait(&pid);
+    }
+}
+
+void handle_signal(int signal)
+{
+    if (signal == SIGINT)
+    {
+        printf("SIGINT");
+    }
+    if (signal == SIGTSTP)
+    {
+        printf("SIGTSTP");
     }
 }
