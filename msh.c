@@ -37,9 +37,9 @@
 #include <string.h>
 #include <signal.h>
 
-#define WHITESPACE " \t\n" // We want to split our command line up into tokens \
-                           // so we need to define what delimits our tokens.   \
-                           // In this case  white space                        \
+#define WHITESPACE " \t\n" // We want to split our command line up into tokens 
+                           // so we need to define what delimits our tokens.   
+                           // In this case  white space                        
                            // will separate the tokens on our command line
 
 #define MAX_COMMAND_SIZE 255 // The maximum command-line size
@@ -124,12 +124,41 @@ void execute()
 
     if (pid == 0)
     {
+        char dir[MAX_COMMAND_SIZE];
+        int commandFound = 1;
 
-        char dir[250];
+        strcpy(dir, "./");
+        strcat(dir, token[0]);
+        if (execl(dir, token[0], token[1], token[2], token[3], token[4], token[5], token[6], token[7], token[8], token[9], NULL))
+        {
+            commandFound = 0;
+        }
+
+        strcpy(dir, "/usr/local/bin/");
+        strcat(dir, token[0]);
+        if (execl(dir, token[0], token[1], token[2], token[3], token[4], token[5], token[6], token[7], token[8], token[9], NULL))
+        {
+            commandFound = 0;
+        }
+
+        strcpy(dir, "/usr/bin/");
+        strcat(dir, token[0]);
+        if (execl(dir, token[0], token[1], token[2], token[3], token[4], token[5], token[6], token[7], token[8], token[9], NULL))
+        {
+            commandFound = 0;
+        }
+
         strcpy(dir, "/bin/");
         strcat(dir, token[0]);
+        if (execl(dir, token[0], token[1], token[2], token[3], token[4], token[5], token[6], token[7], token[8], token[9], NULL))
+        {
+            commandFound = 0;
+        }
 
-        execl(dir, token[0], token[1], token[2], token[3], token[4], token[5], token[6], token[7], token[8], token[9], NULL);
+        if (!commandFound)
+        {
+            printf("%s: Command not found.\n", token[0]);
+        }
 
         exit(EXIT_SUCCESS);
     }
