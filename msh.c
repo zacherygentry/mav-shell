@@ -48,6 +48,7 @@
 
 char *token[MAX_NUM_ARGUMENTS];
 struct sigaction act;
+pid_t pid;
 
 void getInput(char *);
 void execute();
@@ -73,14 +74,7 @@ int main()
 
 void getInput(char *cmd_str)
 {
-    // Print out the msh prompt
     printf("msh> ");
-
-    int i;
-    for (i = 0; i < MAX_NUM_ARGUMENTS; i++)
-    {
-        token[i] = NULL;
-    }
 
     // Read the command from the commandline.  The
     // maximum command that will be read is MAX_COMMAND_SIZE
@@ -129,7 +123,8 @@ void execute()
     {
         exit(EXIT_SUCCESS);
     }
-    pid_t pid = fork();
+
+    pid = fork();
 
     if (pid == 0)
     {
@@ -169,6 +164,7 @@ void execute()
             printf("%s: Command not found.\n", token[0]);
         }
 
+        printf("exit\n");
         exit(EXIT_SUCCESS);
     }
 
@@ -178,14 +174,24 @@ void execute()
     }
 }
 
-void handle_signal(int signal)
+void handle_signal(int sig)
 {
-    if (signal == SIGINT)
+    // CTRL C
+    if (sig == SIGINT)
     {
-        printf("SIGINT");
+        if (pid == 0)
+        {
+            kill(pid, SIGKILL);
+            exit(EXIT_SUCCESS);
+        }
     }
-    if (signal == SIGTSTP)
+
+    // CTRL Z
+    if (sig == SIGTSTP)
     {
-        printf("SIGTSTP");
+        if (pid == 0)
+        {
+            pause();
+        }
     }
 }
