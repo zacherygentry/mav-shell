@@ -50,6 +50,8 @@ char *token[MAX_NUM_ARGUMENTS];
 char cmd_str[MAX_COMMAND_SIZE];
 struct sigaction act;
 pid_t pid;
+pid_t parent_pid;
+pid_t last_process;
 
 void getInput();
 void execute();
@@ -62,6 +64,9 @@ int main()
 
     sigaction(SIGINT, &act, NULL);
     sigaction(SIGTSTP, &act, NULL);
+    sigaction(SIGALRM, &act, NULL);
+
+    parent_pid = getpid();
 
     while (1)
     {
@@ -131,6 +136,8 @@ void execute()
 
     if (pid == 0)
     {
+        last_process = getpid();
+
         char dir[MAX_COMMAND_SIZE];
         int commandFound = 1;
 
@@ -187,7 +194,7 @@ void handle_signal(int sig)
     // CTRL C
     if (sig == SIGINT)
     {
-        if (pid == 0)
+        if (getpid() != parent_pid)
         {
             kill(pid, SIGKILL);
         }
@@ -197,9 +204,8 @@ void handle_signal(int sig)
     // CTRL Z
     if (sig == SIGTSTP)
     {
-        if (pid == 0)
+        if (getpid() != parent_pid)
         {
-            pause();
         }
     }
 }
