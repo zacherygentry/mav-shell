@@ -47,17 +47,16 @@
 #define MAX_NUM_ARGUMENTS 10 // Mav shell only supports five arguments
 
 char *token[MAX_NUM_ARGUMENTS];
+char cmd_str[MAX_COMMAND_SIZE];
 struct sigaction act;
 pid_t pid;
 
-void getInput(char *);
+void getInput();
 void execute();
 void handle_signal();
 
 int main()
 {
-    char *cmd_str = (char *)malloc(MAX_COMMAND_SIZE);
-
     memset(&act, '\0', sizeof(act));
     act.sa_handler = &handle_signal;
 
@@ -66,16 +65,17 @@ int main()
 
     while (1)
     {
-        getInput(cmd_str);
+        getInput();
         execute();
     }
     return 0;
 }
 
-void getInput(char *cmd_str)
+void getInput()
 {
     printf("msh> ");
 
+    memset(cmd_str, '\0', MAX_COMMAND_SIZE);
     // Read the command from the commandline.  The
     // maximum command that will be read is MAX_COMMAND_SIZE
     // This while command will wait here until the user
@@ -83,7 +83,6 @@ void getInput(char *cmd_str)
     // is no input
     while (!fgets(cmd_str, MAX_COMMAND_SIZE, stdin))
         ;
-
     /* Parse input */
 
     int token_count = 0;
@@ -100,6 +99,7 @@ void getInput(char *cmd_str)
     char *working_root = working_str;
 
     // Tokenize the input stringswith whitespace used as the delimiter
+    memset(&token, '\0', sizeof(MAX_NUM_ARGUMENTS));
     while (((arg_ptr = strsep(&working_str, WHITESPACE)) != NULL) &&
            (token_count < MAX_NUM_ARGUMENTS))
     {
@@ -118,13 +118,16 @@ void execute()
 {
     if (token[0] == NULL)
     {
+        return;
     }
     else if (strcmp(token[0], "quit") == 0 || strcmp(token[0], "exit") == 0)
     {
         exit(EXIT_SUCCESS);
     }
-
-    pid = fork();
+    else
+    {
+        pid = fork();
+    }
 
     if (pid == 0)
     {
@@ -164,10 +167,15 @@ void execute()
             printf("%s: Command not found.\n", token[0]);
         }
 
-        printf("exit\n");
         exit(EXIT_SUCCESS);
     }
 
+    if (pid == -1)
+    {
+        // When fork() returns -1, an error happened.
+        perror("fork failed: ");
+        exit(EXIT_FAILURE);
+    }
     else
     {
         wait(&pid);
@@ -182,8 +190,8 @@ void handle_signal(int sig)
         if (pid == 0)
         {
             kill(pid, SIGKILL);
-            exit(EXIT_SUCCESS);
         }
+        wait(&pid);
     }
 
     // CTRL Z
