@@ -129,6 +129,19 @@ void execute()
     {
         exit(EXIT_SUCCESS);
     }
+    else if (strcmp(token[0], "cd") == 0 && token[1] != NULL)
+    {
+        int status = chdir(token[1]);
+        if (status == -1)
+        {
+            printf("No such file or directory named %s.\n", token[1]);
+            return;
+        }
+        else
+        {
+            return;
+        }
+    }
     else
     {
         pid = fork();
