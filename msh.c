@@ -46,15 +46,18 @@
 
 #define MAX_NUM_ARGUMENTS 10 // Mav shell only supports five arguments
 
+#define MAX_HISTORY 15
+
 char *token[MAX_NUM_ARGUMENTS];
 char cmd_str[MAX_COMMAND_SIZE];
 struct sigaction act;
 pid_t pid;
 pid_t parent_pid;
 pid_t last_process;
-pid_t listpids[15];
-int pidCounter = 0;
-char history[15][MAX_COMMAND_SIZE];
+pid_t listpids[MAX_HISTORY];
+int counter = 0;
+char history[MAX_HISTORY][MAX_COMMAND_SIZE];
+int history_cmd = -1;
 
 void getInput();
 void execute();
@@ -106,6 +109,7 @@ void getInput()
     // the correct amount at the end
     char *working_root = working_str;
 
+    memset(&token, '\0', MAX_NUM_ARGUMENTS);
     // Tokenize the input stringswith whitespace used as the delimiter
     memset(&token, '\0', sizeof(MAX_NUM_ARGUMENTS));
     while (((arg_ptr = strsep(&working_str, WHITESPACE)) != NULL) &&
@@ -148,7 +152,7 @@ void execute()
     else if (strcmp(token[0], "listpids") == 0)
     {
         int i, max;
-        max = pidCounter < 15 ? pidCounter : 15;
+        max = counter < MAX_HISTORY ? counter : MAX_HISTORY;
         for (i = 0; i < max; i++)
         {
             printf("%d: %d\n", i, listpids[i]);
@@ -157,19 +161,57 @@ void execute()
     }
     else if (strcmp(token[0], "history") == 0)
     {
-        
+        int i, max;
+        max = counter < MAX_HISTORY ? counter : MAX_HISTORY;
+        for (i = 0; i < max; i++)
+        {
+            printf("%d: %s\n", i, history[i]);
+        }
+        return;
     }
-    else
+    else if (token[0][0] == '!')
     {
-        pid = fork();
-        listpids[pidCounter % 15] = pid;
-        pidCounter++;
+        char number[MAX_COMMAND_SIZE];
+        int i;
+
+        for (i = 1; i < sizeof(token[0]); i++)
+        {
+            number[i - 1] = token[0][i];
+        }
+        if (number[0] != '\0')
+        {
+            history_cmd = atoi(number);
+        }
     }
+    pid = fork();
+    listpids[counter % MAX_HISTORY] = pid;
+
+    char command[MAX_COMMAND_SIZE];
+    memset(&command, '\0', MAX_COMMAND_SIZE);
+    int i;
+    for (i = 0; i < 10; i++)
+    {
+        if (token[i] != NULL)
+        {
+            printf("Token %d: %s", i, token[i]);
+            strcat(command, token[i]);
+        }
+    }
+    printf("%s\n", command);
+    strcpy(history[counter % MAX_HISTORY], command);
+    counter++;
 
     if (pid == 0)
     {
         char dir[MAX_COMMAND_SIZE];
         int commandFound = 1;
+
+        if (history_cmd != -1)
+        {
+            strcpy(token[0], history[history_cmd]);
+            strcat(token[0], "\0");
+            history_cmd = -1;
+        }
 
         strcpy(dir, "./");
         strcat(dir, token[0]);
