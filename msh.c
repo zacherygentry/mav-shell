@@ -57,8 +57,10 @@ struct sigaction act;
 
 // Pid info kept globally for easy manipulation
 pid_t pid;
-// This is the pid for msh
+// This is the pid for msh process
 pid_t parent_pid;
+pid_t child_pid;
+pid_t suspended_process;
 // Holds last 15 pids spawned by this shell
 pid_t listpids[MAX_HISTORY];
 
@@ -230,6 +232,8 @@ void execute()
     // Forks process. Child pid is equal to 0.
     pid = fork();
 
+    child_pid = pid;
+
     // Since fork has been called, pid must be added to the pid list
     listpids[counter % MAX_HISTORY] = pid;
 
@@ -269,6 +273,15 @@ void execute()
             strcat(token[0], "\0");
             // Must be reset to -1 so that this is no automatically called every iteration
             history_cmd = -1;
+        }
+
+        if (strcmp(token[0], "bg") == 0)
+        {
+            if (suspended_process != '\0')
+            {
+                kill(suspended_process, SIGCONT);
+            }
+            exit(EXIT_SUCCESS);
         }
 
         ///////////////////////////
@@ -314,6 +327,7 @@ void execute()
     /// END EXECUTIONS
     /// END CHILD PROCESS
 
+    int status;
     // if the fork failed
     if (pid == -1)
     {
@@ -331,7 +345,7 @@ void execute()
 
 // Signal Handler
 // Global variables used: parent_pid, pid
-// Signal used is passed in as parameter sig 
+// Signal used is passed in as parameter sig
 // Catches Ctrl-C and Ctrl-C. If Ctrl-C is used, kill the process if it is NOT the shell. ctrl-Z suspends the process.
 void handle_signal(int sig)
 {
@@ -348,8 +362,6 @@ void handle_signal(int sig)
     // CTRL Z
     if (sig == SIGTSTP)
     {
-        if (getpid() != parent_pid)
-        {
-        }
+        suspended_process = child_pid;
     }
 }
