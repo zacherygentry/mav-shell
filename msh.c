@@ -52,6 +52,9 @@ struct sigaction act;
 pid_t pid;
 pid_t parent_pid;
 pid_t last_process;
+pid_t listpids[15];
+int pidCounter = 0;
+char history[15][MAX_COMMAND_SIZE];
 
 void getInput();
 void execute();
@@ -142,15 +145,29 @@ void execute()
             return;
         }
     }
+    else if (strcmp(token[0], "listpids") == 0)
+    {
+        int i, max;
+        max = pidCounter < 15 ? pidCounter : 15;
+        for (i = 0; i < max; i++)
+        {
+            printf("%d: %d\n", i, listpids[i]);
+        }
+        return;
+    }
+    else if (strcmp(token[0], "history") == 0)
+    {
+        
+    }
     else
     {
         pid = fork();
+        listpids[pidCounter % 15] = pid;
+        pidCounter++;
     }
 
     if (pid == 0)
     {
-        last_process = getpid();
-
         char dir[MAX_COMMAND_SIZE];
         int commandFound = 1;
 
