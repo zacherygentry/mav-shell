@@ -327,7 +327,6 @@ void execute()
     /// END EXECUTIONS
     /// END CHILD PROCESS
 
-    int status;
     // if the fork failed
     if (pid == -1)
     {
@@ -339,7 +338,12 @@ void execute()
     // Parent process waits here
     else
     {
-        wait(&pid);
+        int status;
+        wait(&status);
+        if (WIFSTOPPED(status))
+        {
+            printf("%d\n", status);
+        }
     }
 }
 
